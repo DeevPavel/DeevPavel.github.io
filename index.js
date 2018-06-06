@@ -1733,6 +1733,33 @@ var parallax = function () {
     key: 'cancelParallax',
     value: function cancelParallax() {
       this.block.style.position = 'static';
+
+      if (this.imageList) {
+        var _iteratorNormalCompletion4 = true;
+        var _didIteratorError4 = false;
+        var _iteratorError4 = undefined;
+
+        try {
+          for (var _iterator4 = this.imageList[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
+            var item = _step4.value;
+
+            item.start();
+          }
+        } catch (err) {
+          _didIteratorError4 = true;
+          _iteratorError4 = err;
+        } finally {
+          try {
+            if (!_iteratorNormalCompletion4 && _iterator4.return) {
+              _iterator4.return();
+            }
+          } finally {
+            if (_didIteratorError4) {
+              throw _iteratorError4;
+            }
+          }
+        }
+      }
     }
   }]);
 
@@ -1757,6 +1784,10 @@ var _createClass = function () { function defineProperties(target, props) { for 
 var _svg = __webpack_require__(18);
 
 var _svg2 = _interopRequireDefault(_svg);
+
+var _svgPath = __webpack_require__(19);
+
+var _svgPath2 = _interopRequireDefault(_svgPath);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -1786,13 +1817,35 @@ var ImgMove = function () {
     this.coef.scrollHeight = Math.abs(1 - this.coef.height) / this.scrollDuration;
 
     if (this.model.svg) {
-      this.svg = new _svg2.default(this.img, this.model.svg, this.scrollDuration, this.startCoord);
-      this.svg.initMask();
+      this.initMask();
     }
+
     this.init();
   }
 
   _createClass(ImgMove, [{
+    key: 'start',
+    value: function start() {
+      this.init();
+
+      if (this.svg) {
+        this.svg.start();
+      }
+    }
+  }, {
+    key: 'initMask',
+    value: function initMask() {
+      if (this.model.svg) {
+        if (this.model.svg.type === 'polygon') {
+          this.svg = new _svg2.default(this.img, this.model.svg, this.scrollDuration, this.startCoord);
+          this.svg.init();
+        } else if (this.model.svg.type === 'path') {
+          this.svg = new _svgPath2.default(this.img, this.model.svg, this.scrollDuration, this.startCoord);
+          this.svg.init();
+        }
+      }
+    }
+  }, {
     key: 'getShift',
     value: function getShift() {
       var parentCoords = this.getCoords(this.img.parentElement);
@@ -1863,9 +1916,6 @@ var ImgMove = function () {
         this.svg.endMove();
       }
     }
-  }, {
-    key: 'fullScreen',
-    value: function fullScreen() {}
   }]);
 
   return ImgMove;
@@ -1886,12 +1936,6 @@ Object.defineProperty(exports, "__esModule", {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _svgPath = __webpack_require__(19);
-
-var _svgPath2 = _interopRequireDefault(_svgPath);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var svg = function () {
@@ -1902,14 +1946,13 @@ var svg = function () {
     this.mask = mask;
     this.duration = duration;
     this.startCoord = startCoord;
-    this.svgPath = null;
 
     this.path = this.getPath();
     this.coef = this.getCoef();
   }
 
   _createClass(svg, [{
-    key: 'getPath',
+    key: "getPath",
     value: function getPath() {
       var _this = this;
 
@@ -1920,7 +1963,7 @@ var svg = function () {
       });
     }
   }, {
-    key: 'getCoef',
+    key: "getCoef",
     value: function getCoef() {
       var _this2 = this;
 
@@ -1931,28 +1974,23 @@ var svg = function () {
       });
     }
   }, {
-    key: 'getMask',
+    key: "getMask",
     value: function getMask(elem) {
       return elem.reduce(function (prev, curr, index, arr) {
         if (index < arr.length - 1) {
-          return prev + curr.join('% ') + '%, ';
+          return prev + curr.join("% ") + "%, ";
         } else {
-          return prev + curr.join('% ') + '%';
+          return prev + curr.join("% ") + "%";
         }
-      }, '');
+      }, "");
     }
   }, {
-    key: 'initMask',
-    value: function initMask() {
-      if (this.mask.type === 'polygon') {
-        this.img.style.clipPath = 'polygon(' + this.getMask(this.mask.start) + ')';
-      } else if (this.mask.type === 'path') {
-        this.svgPath = new _svgPath2.default(this.img, this.mask, this.duration, this.startCoord);
-        this.svgPath.init();
-      }
+    key: "init",
+    value: function init() {
+      this.img.style.clipPath = "polygon(" + this.getMask(this.mask.start) + ")";
     }
   }, {
-    key: 'maskMove',
+    key: "maskMove",
     value: function maskMove() {
       var _this3 = this;
 
@@ -1962,18 +2000,19 @@ var svg = function () {
         });
       });
 
-      if (this.mask.type === 'polygon') {
-        var maskPoints = this.getMask(points);
-        this.img.style.clipPath = 'polygon(' + maskPoints + ')';
-        this.img.style.webkitClipPath = 'polygon(' + maskPoints + ')';
-      } else {
-        this.svgPath.svgPathMove();
-      }
+      var maskPoints = this.getMask(points);
+      this.img.style.clipPath = "polygon(" + maskPoints + ")";
+      this.img.style.webkitClipPath = "polygon(" + maskPoints + ")";
     }
   }, {
-    key: 'endMove',
+    key: "start",
+    value: function start() {
+      this.img.style.clipPath = "polygon(" + this.getMask(this.mask.start) + ")";
+    }
+  }, {
+    key: "endMove",
     value: function endMove() {
-      this.img.style.clipPath = 'polygon(' + this.getMask(this.mask.end) + ')';
+      this.img.style.clipPath = "polygon(" + this.getMask(this.mask.end) + ")";
     }
   }]);
 
@@ -2101,8 +2140,8 @@ var SvgPath = function () {
       this.img.style.webkitClipPath = "url(#" + this.mask.id + ")";
     }
   }, {
-    key: "svgPathMove",
-    value: function svgPathMove() {
+    key: "maskMove",
+    value: function maskMove() {
       var _this3 = this;
 
       var points = this.mask.start.map(function (item, i) {
@@ -2120,6 +2159,16 @@ var SvgPath = function () {
       this.obj = this.svg.querySelector("#" + this.mask.id + "-path");
 
       this.obj.setAttribute("d", this.getMask(points));
+    }
+  }, {
+    key: "start",
+    value: function start() {
+      this.svg.innerHTML = this.getTemlate(this.mask.start);
+    }
+  }, {
+    key: "endMove",
+    value: function endMove() {
+      this.svg.innerHTML = this.getTemlate(this.mask.end);
     }
   }]);
 
